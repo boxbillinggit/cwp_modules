@@ -155,14 +155,14 @@ class phalcon
 		$get = mysql_query("SELECT value FROM `custom_settings` WHERE `name` = 'phalcon';");
 		$mysql = mysql_fetch_array($get);
 
-		if($this->date_last_commits >= $mysql['value']) {
+		if($mysql['value'] < $this->date_last_commits) {
 			
 		echo '<center><b>Github last commits date:</b><br>';
 		echo $this->date_last_commits.'<br> <br>';
 			
-        echo '<div class="btn-group">
-                <button class="btn btn-warning">Update Phalcon</button>
-              </div></center><br>';
+                echo '<div class="btn-group">
+                      <button class="btn btn-warning">Update Phalcon</button>
+                      </div></center><br>';
 		}
 	}
 }
