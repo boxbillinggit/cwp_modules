@@ -10,7 +10,8 @@ class phalcon
     private $dir = "root";
     private $status_phalcon = "";
     private $version_phalcon = "";
-    private $github_url = "";
+    private $github_url = "https://api.github.com/repos/phalcon/cphalcon/commits?per_page=1&sha=6ed9dbb04f06386ae01d580e553d73652e0dfdfa";
+	private $date_last_commits = "";
 
     public $alert = "";	
 
@@ -22,7 +23,24 @@ class phalcon
     public function initalize()
     {
         $this->check_is_ph_loaded();
+        $this->date_last_commit();
+		$this->database();
     }
+	
+	public function database()
+	{
+		$sql = "CREATE TABLE IF NOT EXISTS `custom_settings` (
+				  `id` int(11) NOT NULL AUTO_INCREMENT,
+				  `name` varchar(155) NOT NULL,
+				  `value` text NOT NULL,
+				  PRIMARY KEY (`id`)
+				);";
+		mysql_query($sql);
+
+		$date = date('Y-m-d H:i:s');
+		$sql_insert = "INSERT INTO `custom_settings` (`id`, `name`, `value`) VALUES (1, 'phalcon', '".$date."');";		
+		mysql_query($sql_insert);
+	}
 
     public function get_ph_version()
     {
@@ -99,6 +117,53 @@ class phalcon
 					  <a class="close" data-dismiss="alert">×</a>  
 					  '.$this->message.' 
 				  </div>';	
+	}
+	
+	public function date_last_commit()
+	{
+		$context = stream_context_create(array(
+		  'http' => array(
+			'header'=> "User-Agent: http://mikeangstadt.name\r\n"
+		  )
+		));
+		
+		$response = file_get_contents($this->github_url, false, $context);
+     
+		if ($response === false){
+		  throw new Exception("Error contacting github.");
+		}
+		 
+		//parse the JSON
+		$json = json_decode($response);
+		if ($json === null){
+		  throw new Exception("Error parsing JSON response from github.");
+		}
+		if (isset($json->error)){
+		  throw new Exception($json->error);
+		}
+		
+		$date = new DateTime($json[0]->commit->author->date);
+		
+		$this->date_last_commits = $date->format("Y-m-d H:i:s");
+		
+		$this->update();
+		//return $date->format("Y-m-d H:i:s");	
+	}
+	
+	public function update()
+	{
+		$get = mysql_query("SELECT value FROM `custom_settings` WHERE `name` = 'phalcon';");
+		$mysql = mysql_fetch_array($get);
+
+		if($this->date_last_commits >= $mysql['value']) {
+			
+		echo '<center><b>Github last commits date:</b><br>';
+		echo $this->date_last_commits.'<br> <br>';
+			
+        echo '<div class="btn-group">
+                <button class="btn btn-warning">Update Phalcon</button>
+              </div></center><br>';
+		}
 	}
 }
 
