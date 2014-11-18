@@ -10,7 +10,8 @@ class phalcon
     private $dir = "root";
     private $status_phalcon = "";
     private $version_phalcon = "";
-    private $github_url = "https://api.github.com/repos/phalcon/cphalcon/commits?per_page=1&sha=6ed9dbb04f06386ae01d580e553d73652e0dfdfa";
+	private $github_braches = "https://api.github.com/repos/phalcon/cphalcon/branches";
+    private $github_url = "https://api.github.com/repos/phalcon/cphalcon/commits?per_page=1&sha=";
 	private $date_last_commits = "";
 
     public $alert = "";	
@@ -127,7 +128,9 @@ class phalcon
 		  )
 		));
 		
-		$response = file_get_contents($this->github_url, false, $context);
+		$branches = json_decode(file_get_contents($this->github_braches, false, $context));
+		
+		$response = file_get_contents($this->github_url.$branches[26]->commit->sha, false, $context);
      
 		if ($response === false){
 		  throw new Exception("Error contacting github.");
@@ -143,8 +146,9 @@ class phalcon
 		}
 		
 		$date = new DateTime($json[0]->commit->author->date);
-		
+
 		$this->date_last_commits = $date->format("Y-m-d H:i:s");
+		$this->last_commits_message = $json[0]->commit->message;
 		
 		$this->update();
 		//return $date->format("Y-m-d H:i:s");	
@@ -155,14 +159,15 @@ class phalcon
 		$get = mysql_query("SELECT value FROM `custom_settings` WHERE `name` = 'phalcon';");
 		$mysql = mysql_fetch_array($get);
 
-		if($mysql['value'] < $this->date_last_commits) {
+		if($this->date_last_commits > $mysql['value']) {
 			
 		echo '<center><b>Github last commits date:</b><br>';
-		echo $this->date_last_commits.'<br> <br>';
+		echo $this->date_last_commits.'<br>';
+		echo $this->last_commits_message.'<br><br>';
 			
-                echo '<div class="btn-group">
-                      <button class="btn btn-warning">Update Phalcon</button>
-                      </div></center><br>';
+        echo '<div class="btn-group">
+                <button class="btn btn-warning">Update Phalcon</button>
+              </div></center><br>';
 		}
 	}
 }
