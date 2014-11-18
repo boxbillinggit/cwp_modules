@@ -7,7 +7,7 @@ if ( !isset( $include_path ) )
 
 class phalcon
 {	
-    private $dir = "root";
+    private $dir = "/root";
     private $status_phalcon = "";
     private $version_phalcon = "";
 	private $github_braches = "https://api.github.com/repos/phalcon/cphalcon/branches";
@@ -18,30 +18,14 @@ class phalcon
 
     public function __construct()
     {
-        echo '<center><b>Check is Phalcon installed</b></center> <br>';	
+        echo '<center><b>Check is Phalcon installed</b></center> <br>';		
     }
 
     public function initalize()
     {
         $this->check_is_ph_loaded();
         $this->date_last_commit();
-		$this->database();
     }
-	
-	public function database()
-	{
-		$sql = "CREATE TABLE IF NOT EXISTS `custom_settings` (
-				  `id` int(11) NOT NULL AUTO_INCREMENT,
-				  `name` varchar(155) NOT NULL,
-				  `value` text NOT NULL,
-				  PRIMARY KEY (`id`)
-				);";
-		mysql_query($sql);
-
-		$date = date('Y-m-d H:i:s');
-		$sql_insert = "INSERT INTO `custom_settings` (`id`, `name`, `value`) VALUES (1, 'phalcon', '".$date."');";		
-		mysql_query($sql_insert);
-	}
 
     public function get_ph_version()
     {
@@ -115,9 +99,9 @@ class phalcon
 	public function toHtml()
 	{
 			echo '<div class="alert '.$this->alert.'">  
-					  <a class="close" data-dismiss="alert">×</a>  
-					  '.$this->message.' 
-				  </div>';	
+				<a class="close" data-dismiss="alert">×</a>  
+				'.$this->message.' 
+			       </div>';	
 	}
 	
 	public function date_last_commit()
@@ -156,20 +140,24 @@ class phalcon
 	
 	public function update()
 	{
-		$get = mysql_query("SELECT value FROM `custom_settings` WHERE `name` = 'phalcon';");
-		$mysql = mysql_fetch_array($get);
-
-		if($this->date_last_commits > $mysql['value']) {
-			
+		
 		echo '<center><b>Github last commits date:</b><br>';
 		echo $this->date_last_commits.'<br>';
 		echo $this->last_commits_message.'<br><br>';
-			
-        echo '<div class="btn-group">
-                <button class="btn btn-warning">Update Phalcon</button>
-              </div></center><br>';
+
+		if(@$_POST['update'] == 'start') {
+		$this->message_install();
+		} else {
+                echo '<div class="btn-group">
+		      <form action="index.php?module=php_phalcon" method="POST">
+			  <input type="hidden" name="update" value="start">
+                          <button class="btn btn-warning">Show Update Instruction</button>
+		      </form>
+                      </div></center><br>';
 		}
+
 	}
+
 }
 
 $phalcon = new phalcon();
